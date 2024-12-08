@@ -16,6 +16,11 @@ export default async (message, client) => {
         ? `${Math.floor(timeAgo / 60)} minute(s) ago` 
         : `${timeAgo} second(s) ago`;
 
+    const messageIsLong = message.content?.length > 1023;
+    const truncatedMessage = messageIsLong 
+        ? "Refer to next message" 
+        : message.content || '[No content available]';
+
     const embed = new EmbedBuilder()
         .setTitle('🗑️ Message Deleted')
         .setColor(0xFF0000)
@@ -38,7 +43,7 @@ export default async (message, client) => {
             },
             {
                 name: 'Deleted content',
-                value: message.content || '[No content available]',
+                value: truncatedMessage,
                 inline: false,
             },
         )
@@ -48,5 +53,10 @@ export default async (message, client) => {
         })
         .setTimestamp(deletedAt);
 
-    logChannel.send({ embeds: [embed] });
+    await logChannel.send({ embeds: [embed] });
+
+    if (messageIsLong) {
+        const fullContentMessage = `\`\`\`\n${message.content}\n\`\`\``;
+        await logChannel.send(fullContentMessage);
+    }
 };
